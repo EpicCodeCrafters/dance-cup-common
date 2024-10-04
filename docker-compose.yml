@@ -19,4 +19,4 @@ services:
       - dance-cup-api-db
     command: dotnet ECC.DanceCup.Api.dll
     environment:
-      PostgresOptions__ConnectionString: "Host=localhost; Port=15432; Database=dance-cup-api; Username=postgres; Password=postgres;"
+      StorageOptions__ConnectionString: "Host=localhost; Port=15432; Database=dance-cup-api; Username=postgres; Password=postgres;"
