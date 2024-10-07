@@ -33,8 +33,8 @@ services:
   dance-cup-api:
     container_name: dance-cup-api
     build:
-      context: ./
-      dockerfile: ./dance-cup-api/Dockerfile
+      context: ./dance-cup-api
+      dockerfile: ./Dockerfile
     depends_on:
       - dance-cup-api-db
     ports:
@@ -47,8 +47,8 @@ services:
   # dance-cup-auth:
   #   container_name: dance-cup-auth
   #   build:
-  #     context: ./
-  #     dockerfile: ./dance-cup-auth/Dockerfile
+  # context: ./dance-cup-auth
+  # dockerfile: ./Dockerfile
   #   depends_on:
   #     - dance-cup-auth-db
   #   ports:
@@ -61,8 +61,8 @@ services:
   # dance-cup-ui:
   #   container_name: dance-cup-ui
   #   build:
-  #     context: ./
-  #     dockerfile: ./dance-cup-ui/Dockerfile
+  # context: ./dance-cup-ui
+  # dockerfile: ./Dockerfile
   #   depends_on:
   #     - dance-cup-api
   #     - dance-cup-auth
