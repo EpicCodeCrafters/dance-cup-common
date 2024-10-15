@@ -44,33 +44,35 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
 
-  # dance-cup-auth:
-  #   container_name: dance-cup-auth
-  #   build:
-  # context: ./dance-cup-auth
-  # dockerfile: ./Dockerfile
-  #   depends_on:
-  #     - dance-cup-auth-db
-  #   ports:
-  #     - 82:80
-  #   environment:
-  #     ASPNETCORE_URLS: http://+:80
-  #     ASPNETCORE_ENVIRONMENT: Development
-  #     StorageOptions__ConnectionString: "Host=dance-cup-auth-db; Port=5432; Database=dance-cup-auth; Username=postgres-user; Password=postgres;"
+  dance-cup-auth:
+    container_name: dance-cup-auth
+    build:
+      context: ./dance-cup-auth
+      dockerfile: ./Dockerfile
+    depends_on:
+      - dance-cup-auth-db
+    ports:
+      - 82:80
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      ASPNETCORE_ENVIRONMENT: Development
+      StorageOptions__ConnectionString: "Host=dance-cup-auth-db; Port=5432; Database=dance-cup-auth; Username=postgres-user; Password=postgres;"
 
-  # dance-cup-ui:
-  #   container_name: dance-cup-ui
-  #   build:
-  # context: ./dance-cup-ui
-  # dockerfile: ./Dockerfile
-  #   depends_on:
-  #     - dance-cup-api
-  #     - dance-cup-auth
-  #   ports:
-  #     - 83:80
-  #   environment:
-  #     ASPNETCORE_URLS: http://+:80
-  #     ASPNETCORE_ENVIRONMENT: Development
+  dance-cup-ui:
+    container_name: dance-cup-ui
+    build:
+      context: ./dance-cup-ui
+      dockerfile: ./Dockerfile
+    depends_on:
+      - dance-cup-api
+      - dance-cup-auth
+    ports:
+      - 83:80
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      ASPNETCORE_ENVIRONMENT: Development
+      DanceCupApiOptions__Address: http://dance-cup-api:80
+      DanceCupAuthOptions__Address: http://dance-cup-auth:80
 
 volumes:
   dance-cup-api-db-volume:
