@@ -26,7 +26,7 @@ services:
     image: confluentinc/cp-kafka:7.4.4
     depends_on:
       - kafka
-    entrypoint: [ "sh", "-c", "sleep 10 && kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic dance_cup_events && echo 'Топик создан'" ]
+    entrypoint: [ "sh", "-c", "sleep 10 && kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --replication-factor 1 --partitions 3 --topic dance_cup_events && echo 'Топик создан'" ]
 
   dance-cup-api-db:
     container_name: dance-cup-api-db
