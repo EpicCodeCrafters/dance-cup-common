@@ -1,0 +1,110 @@
+services:
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:7.4.4
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+
+  kafka:
+    container_name: kafka
+    image: confluentinc/cp-kafka:7.4.4
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.4.4
+    depends_on:
+      - kafka
+    entrypoint: [ "sh", "-c", "sleep 10 && kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --replication-factor 1 --partitions 3 --topic dance_cup_events && echo 'Топик создан'" ]
+
+  dance-cup-api-db:
+    container_name: dance-cup-api-db
+    image: postgres
+    ports:
+      - 15432:5432
+    environment:
+      POSTGRES_USER: postgres-user
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dance-cup-api
+      PGDATA: /data/postgres
+    command: -c log_statement=all
+    volumes:
+      - dance-cup-api-db-volume:/data/postgres
+
+  dance-cup-auth-db:
+    container_name: dance-cup-auth-db
+    image: postgres
+    ports:
+      - 25432:5432
+    environment:
+      POSTGRES_USER: postgres-user
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dance-cup-auth
+      PGDATA: /data/postgres
+    command: -c log_statement=all
+    volumes:
+      - dance-cup-auth-db-volume:/data/postgres
+  
+  dance-cup-api:
+    container_name: dance-cup-api
+    image: ggamesstudio/dance-cup-api:latest
+    depends_on:
+      - dance-cup-api-db
+      - kafka-init
+    ports:
+      - 81:80
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
+      KafkaOptions__BootstrapServers: "kafka:9092"
+      KafkaOptions__Topics__DanceCupEvents__Name: "dance_cup_events"
+      KafkaOptions__Topics__DanceCupEvents__ConsumerGroup: "dance-cup-api"
+
+  dance-cup-auth:
+    container_name: dance-cup-auth
+    image: ggamesstudio/dance-cup-auth:latest
+    depends_on:
+      - dance-cup-auth-db
+      - kafka-init
+    ports:
+      - 82:80
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      StorageOptions__ConnectionString: "Host=dance-cup-auth-db; Port=5432; Database=dance-cup-auth; Username=postgres-user; Password=postgres;"
+      SecurityOptions__Secret: "cfa4a6f7-8d5d-4c61-aec9-0791d743dbb9_d2f60f8e-1d61-4c4a-92a5-4f9a90745691"
+      SecurityOptions__Audience: "dance-cup-audience"
+      SecurityOptions__Issuer: "dance-cup-issuer"
+      SecurityOptions__TokenExpiresMinutes: 60
+      KafkaOptions__BootstrapServers: "kafka:9092"
+      KafkaOptions__Topics__DanceCupEvents__Name: "dance_cup_events"
+
+  dance-cup-ui:
+    container_name: dance-cup-ui
+    image: ggamesstudio/dance-cup-ui:latest
+    depends_on:
+      - dance-cup-api
+      - dance-cup-auth
+    ports:
+      - 80:80
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      DanceCupApiOptions__Address: http://dance-cup-api:80
+      DanceCupAuthOptions__Address: http://dance-cup-auth:80
+      AuthOptions__Secret: "cfa4a6f7-8d5d-4c61-aec9-0791d743dbb9_d2f60f8e-1d61-4c4a-92a5-4f9a90745691"
+      AuthOptions__ValidAudience: "dance-cup-audience"
+      AuthOptions__ValidIssuer: "dance-cup-issuer"
+
+volumes:
+  dance-cup-api-db-volume:
+  dance-cup-auth-db-volume:
