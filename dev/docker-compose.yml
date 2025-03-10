@@ -96,6 +96,7 @@ services:
     depends_on:
       - dance-cup-api-db
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
       KafkaOptions__BootstrapServers: "kafka1:9092,kafka2:9093,kafka3:9094"
@@ -113,6 +114,7 @@ services:
     ports:
       - 81:80
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
       KafkaOptions__BootstrapServers: "kafka1:9092,kafka2:9093,kafka3:9094"
@@ -129,6 +131,7 @@ services:
     ports:
       - 812:80
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
       KafkaOptions__BootstrapServers: "kafka1:9092,kafka2:9093,kafka3:9094"
@@ -145,6 +148,7 @@ services:
     ports:
       - 813:80
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
       KafkaOptions__BootstrapServers: "kafka1:9092,kafka2:9093,kafka3:9094"
@@ -157,6 +161,7 @@ services:
     depends_on:
       - dance-cup-auth-db
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       StorageOptions__ConnectionString: "Host=dance-cup-auth-db; Port=5432; Database=dance-cup-auth; Username=postgres-user; Password=postgres;"
       SecurityOptions__Secret: "cfa4a6f7-8d5d-4c61-aec9-0791d743dbb9_d2f60f8e-1d61-4c4a-92a5-4f9a90745691"
@@ -177,6 +182,7 @@ services:
     ports:
       - 82:80
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       StorageOptions__ConnectionString: "Host=dance-cup-auth-db; Port=5432; Database=dance-cup-auth; Username=postgres-user; Password=postgres;"
       SecurityOptions__Secret: "cfa4a6f7-8d5d-4c61-aec9-0791d743dbb9_d2f60f8e-1d61-4c4a-92a5-4f9a90745691"
@@ -195,6 +201,7 @@ services:
     ports:
       - 80:80
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       DanceCupApiOptions__Address: http://dance-cup-api:80
       DanceCupAuthOptions__Address: http://dance-cup-auth:80
