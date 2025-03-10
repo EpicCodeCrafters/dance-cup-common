@@ -92,7 +92,7 @@ services:
   
   dance-cup-api-migrate:
     container_name: dance-cup-api-migrate
-    image: ggamesstudio/dance-cup-api:latest
+    image: ggamesstudio/dance-cup-api-dev:latest
     depends_on:
       - dance-cup-api-db
     environment:
@@ -106,7 +106,7 @@ services:
   
   dance-cup-api:
     container_name: dance-cup-api
-    image: ggamesstudio/dance-cup-api:latest
+    image: ggamesstudio/dance-cup-api-dev:latest
     depends_on:
       - dance-cup-api-db
       - kafka-init
@@ -123,7 +123,7 @@ services:
       
   dance-cup-api-2:
     container_name: dance-cup-api-2
-    image: ggamesstudio/dance-cup-api:latest
+    image: ggamesstudio/dance-cup-api-dev:latest
     depends_on:
       - dance-cup-api-db
       - kafka-init
@@ -140,7 +140,7 @@ services:
       
   dance-cup-api-3:
     container_name: dance-cup-api-3
-    image: ggamesstudio/dance-cup-api:latest
+    image: ggamesstudio/dance-cup-api-dev:latest
     depends_on:
       - dance-cup-api-db
       - kafka-init
@@ -157,7 +157,7 @@ services:
 
   dance-cup-auth-migrate:
     container_name: dance-cup-auth-migrate
-    image: ggamesstudio/dance-cup-auth:latest
+    image: ggamesstudio/dance-cup-auth-dev:latest
     depends_on:
       - dance-cup-auth-db
     environment:
@@ -174,7 +174,7 @@ services:
   
   dance-cup-auth:
     container_name: dance-cup-auth
-    image: ggamesstudio/dance-cup-auth:latest
+    image: ggamesstudio/dance-cup-auth-dev:latest
     depends_on:
       - dance-cup-auth-db
       - kafka-init
@@ -194,7 +194,7 @@ services:
 
   dance-cup-ui:
     container_name: dance-cup-ui
-    image: ggamesstudio/dance-cup-ui:latest
+    image: ggamesstudio/dance-cup-ui-dev:latest
     depends_on:
       - dance-cup-api
       - dance-cup-auth
