@@ -25,3 +25,25 @@ jobs:
       - name: 💀 Остановка контейнеров
         if: always()  # 🔥 Теперь даже если что-то упадёт, контейнеры всё равно прибьём
         run: docker-compose -f dev/docker-compose.yml down
+      - name: Notify success
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.ECC_TG_CHAT_ID }}
+        run: |
+          MESSAGE="✅ Все образы **dev** окружения **dance-cup** работают корректно"
+          curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage \
+            -d chat_id=$TELEGRAM_CHAT_ID \
+            -d text="$MESSAGE" \
+            -d parse_mode=MarkdownV2
+      - name: Notify failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MESSAGE="❌ Не все образы **dev** окружения **dance-cup** работают корректно"
+          curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage \
+            -d chat_id=$TELEGRAM_CHAT_ID \
+            -d text="$MESSAGE" \
+            -d parse_mode=MarkdownV2
