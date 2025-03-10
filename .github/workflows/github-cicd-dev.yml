@@ -1,6 +1,6 @@
 name: Validate dev
 
-on: push  # 🟢 Может, добавить `pull_request`, чтоб и PR чекать?
+on: [ push, workflow_dispatch ]
 
 jobs:
   test-compose:
