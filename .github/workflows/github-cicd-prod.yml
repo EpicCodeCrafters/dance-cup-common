@@ -1,4 +1,4 @@
-name: Validate dev
+name: Validate prod
 
 on: push  # 🟢 Может, добавить `pull_request`, чтоб и PR чекать?
 
@@ -12,16 +12,16 @@ jobs:
         run: sudo apt-get install -y docker-compose
         # 🔴 На ubuntu-latest оно уже есть, можно убрать
       - name: 🚀 Запуск docker-compose
-        run: docker-compose -f dev/docker-compose.yml up -d
+        run: docker-compose -f prod/docker-compose.yml up -d
         # ⚠️ Если что-то не взлетит, workflow всё равно пойдёт дальше. Давай фикс:
       - name: ✅ Проверка состояния контейнеров
-        run: docker-compose -f dev/docker-compose.yml up --exit-code-from dance-cup-ui
+        run: docker-compose -f prod/docker-compose.yml up --exit-code-from dance-cup-ui
         # 🔥 Теперь если сервис сдох, весь workflow отвалится
       - name: 🏁 Проверка работы (ждём 10 сек, потом смотрим логи)
         run: |
           sleep 10  # ⚠️ Костыль! Лучше healthcheck или `wait-for-it`
           docker ps
-          docker-compose -f dev/docker-compose.yml logs
+          docker-compose -f prod/docker-compose.yml logs
       - name: 💀 Остановка контейнеров
         if: always()  # 🔥 Теперь даже если что-то упадёт, контейнеры всё равно прибьём
-        run: docker-compose -f dev/docker-compose.yml down
+        run: docker-compose -f prod/docker-compose.yml down
