@@ -22,7 +22,7 @@ jobs:
         # 🔥 Теперь если сервис сдох, весь workflow отвалится
       - name: 🏁 Проверка работы (ждём 10 сек, потом смотрим логи)
         run: |
-          sleep 10  # ⚠️ Костыль! Лучше healthcheck или `wait-for-it`
+          sleep 30  # ⚠️ Костыль! Лучше healthcheck или `wait-for-it`
           docker ps
           docker-compose -f prod/docker-compose.yml logs
       - name: 💀 Остановка контейнеров
@@ -34,7 +34,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.ECC_TG_CHAT_ID }}
         run: |
-          MESSAGE="✅✅✅ Все образы prod окружения dance\\-cup работают корректно"
+          MESSAGE="✅✅✅ Все образы prod окружения dance\\-cup запускаются корректно"
           curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage \
             -d chat_id=$TELEGRAM_CHAT_ID \
             -d text="$MESSAGE" \
