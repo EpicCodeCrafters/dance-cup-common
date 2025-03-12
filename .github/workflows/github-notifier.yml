@@ -17,18 +17,25 @@ jobs:
       - name: Генерация сообщения через Hugging Face AI
         if: ${{ env.NOTIFIER_ENABLED == 'true' }}
         env:
-          HUGGINGFACE_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # Убедись, что тут правильный токен
+          HUGGINGFACE_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # Убедись, что это правильный токен Hugging Face
         run: |
           MODEL_NAME="sberbank-ai/rugpt3small_based_on_gpt2"
           PROMPT="Ты — руководитель команды разработки, который любит играть иногда хорошего полицейского, а иногда плохого (случайно). Напиши сообщение в Telegram, спрашивающее о статусе задач у незадачливого подчинённого с ником @SenchinYB, заодно пожелай хорошего дня, утра или вечера, в зависимости от текущего времени."
+          
+          # Отладка: выводим начало токена для проверки (без полного раскрытия)
+          echo "HUGGINGFACE_API_KEY starts with: ${HUGGINGFACE_API_KEY:0:3}"
           
           if [ -n "$HUGGINGFACE_API_KEY" ]; then
               AUTH_HEADER="-H \"Authorization: Bearer $HUGGINGFACE_API_KEY\""
           else
               echo "HUGGINGFACE_API_KEY не задан, использование резервного сообщения"
-              echo "MESSAGE=Ошибка" >> $GITHUB_ENV
+              echo "MESSAGE=Ошибка: токен не задан" >> $GITHUB_ENV
               exit 0
           fi
+          
+          # Отладка: выводим URL и заголовки
+          echo "API URL: https://api-inference.huggingface.co/models/${MODEL_NAME}"
+          echo "Headers: Content-Type: application/json, Authorization: Bearer [скрыто]"
           
           RESPONSE_JSON=$(curl -s -X POST "https://api-inference.huggingface.co/models/${MODEL_NAME}" \
             -H "Content-Type: application/json" \
@@ -37,18 +44,25 @@ jobs:
           
           echo "DEBUG: API response: $RESPONSE_JSON"
           
-          ERROR=$(echo "$RESPONSE_JSON" | jq -r '.error // empty')
-          if [ -n "$ERROR" ]; then
-            echo "Ошибка: $ERROR. Используем резервное сообщение." >&2
-            RESPONSE="Ошибка"
-          else
-            RESPONSE=$(echo "$RESPONSE_JSON" | jq -r '.[0].generated_text')
-            RESPONSE="${RESPONSE#${PROMPT}}"
-            RESPONSE=$(echo "$RESPONSE" | sed 's/^ *//')
-            RESPONSE=$(echo "$RESPONSE" | sed 's/!/\\!/g; s/\./\\./g; s/_/\\_/g; s/-/\\-/g')  # Экранирование
-            if [ -z "$RESPONSE" ]; then
-              RESPONSE="Ошибка"
+          # Проверяем, является ли ответ JSON
+          if echo "$RESPONSE_JSON" | jq . > /dev/null 2>&1; then
+            ERROR=$(echo "$RESPONSE_JSON" | jq -r '.error // empty')
+            if [ -n "$ERROR" ]; then
+              echo "Ошибка API: $ERROR. Используем резервное сообщение." >&2
+              RESPONSE="Ошибка: $ERROR"
+            else
+              RESPONSE=$(echo "$RESPONSE_JSON" | jq -r '.[0].generated_text')
+              RESPONSE="${RESPONSE#${PROMPT}}"  # Убираем промпт из ответа
+              RESPONSE=$(echo "$RESPONSE" | sed 's/^ *//')  # Убираем лишние пробелы
+              # Экранирование символов для MarkdownV2
+              RESPONSE=$(echo "$RESPONSE" | sed 's/!/\\!/g; s/\./\\./g; s/_/\\_/g; s/-/\\-/g; s/(/\\(/g; s/)/\\)/g')
+              if [ -z "$RESPONSE" ]; then
+                RESPONSE="Ошибка: пустой ответ от модели"
+              fi
             fi
+          else
+            echo "Ошибка: API вернул невалидный JSON: $RESPONSE_JSON" >&2
+            RESPONSE="Ошибка: невалидный ответ от API"
           fi
           
           echo "DEBUG: Processed response: $RESPONSE"
