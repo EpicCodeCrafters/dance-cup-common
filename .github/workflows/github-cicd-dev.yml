@@ -1,9 +1,8 @@
 name: Validate dev
 
 on: 
-  workflow_dispatch:
   schedule:
-    - cron: "0 14 * * *"
+    - cron: "8 14 * * *"
 
 jobs:
   test-compose:
