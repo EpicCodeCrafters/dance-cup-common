@@ -1,11 +1,13 @@
 name: Notify
 
-on: 
+on:
   workflow_dispatch:
 
 jobs:
   loop-job:
     runs-on: ubuntu-latest
+    env:
+      NOTIFIER_ENABLED: ${{ secrets.NOTIFIER_ENABLED }}
     steps:
       - name: Запуск работы
         run: echo "Начало работы"
@@ -14,7 +16,7 @@ jobs:
         run: sleep 3600  # Ждём 1 час (3600 секунд)
 
       - name: Notify
-        if: ${{ secrets.NOTIFIER_ENABLED == 'true' }}
+        if: ${{ env.NOTIFIER_ENABLED == 'true' }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.ECC_TG_CHAT_ID }}
