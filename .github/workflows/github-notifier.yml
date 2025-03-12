@@ -39,7 +39,7 @@ jobs:
             RESPONSE="${RESPONSE#${PROMPT}}"
             RESPONSE=$(echo "$RESPONSE" | sed 's/^ *//')
             if [ -z "$RESPONSE" ]; then
-              RESPONSE="Привет! Ошибка оповещения."
+              RESPONSE="Привет\\! Ошибка оповещения :("
             fi
           fi
           
