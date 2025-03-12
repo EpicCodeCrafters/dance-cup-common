@@ -11,6 +11,9 @@ jobs:
     env:
       NOTIFIER_ENABLED: ${{ secrets.NOTIFIER_ENABLED }}
     steps:
+      - name: Установка jq (если отсутствует)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Генерация сообщения через ChatGPT
         if: ${{ env.NOTIFIER_ENABLED == 'true' }}
         env:
@@ -22,14 +25,18 @@ jobs:
             -d '{
               "model": "gpt-4",
               "messages": [
-                {"role": "system", "content": "Ты — руководитель команды разработки, который любит играть иногда хорошего полицейского, а иногда плохого (случайно)."},
-                {"role": "user", "content": "Напиши сообщение в Telegram, спрашивающее о статусе задач у незадачливого подчинённого с ником @SenchinYB, заодно пожелалай хорошего дня, утра или вечера, в зависимости от текущего времени."}
+                {"role": "system", "content": "Ты — дружелюбный бот, который спрашивает о статусе задач."},
+                {"role": "user", "content": "Напиши короткое сообщение в Telegram, спрашивающее о статусе задач."}
               ],
               "temperature": 0.7
             }' | jq -r '.choices[0].message.content')
-
-          echo "$RESPONSE"
-          echo "MESSAGE=\"$RESPONSE\"" >> $GITHUB_ENV
+          
+          if [[ -z "$RESPONSE" || "$RESPONSE" == "null" ]]; then
+            echo "Ошибка: OpenAI API не вернул сообщение" >&2
+            exit 1
+          fi
+          
+          echo "MESSAGE="$RESPONSE"" >> $GITHUB_ENV
 
       - name: Notify
         if: ${{ env.NOTIFIER_ENABLED == 'true' }}
