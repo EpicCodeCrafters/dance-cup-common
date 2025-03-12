@@ -1,6 +1,6 @@
 name: Notify
 
-on: 
+on:
   schedule:
     - cron: '0 7 * * *'
   workflow_dispatch:
@@ -19,24 +19,33 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          RESPONSE=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
+          # Проверка, что API ключ установлен
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "Ошибка: OPENAI_API_KEY не установлен" >&2
+            exit 1
+          fi
+
+          RESPONSE_JSON=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -H "Content-Type: application/json" \
             -d '{
-              "model": "gpt-4",
+              "model": "gpt-3.5-turbo",
               "messages": [
                 {"role": "system", "content": "Ты — дружелюбный бот, который спрашивает о статусе задач."},
                 {"role": "user", "content": "Напиши короткое сообщение в Telegram, спрашивающее о статусе задач."}
               ],
               "temperature": 0.7
-            }' | jq -r '.choices[0].message.content')
-          
+            }')
+
+          echo "DEBUG: API response: $RESPONSE_JSON"
+          RESPONSE=$(echo "$RESPONSE_JSON" | jq -r '.choices[0].message.content')
+
           if [[ -z "$RESPONSE" || "$RESPONSE" == "null" ]]; then
             echo "Ошибка: OpenAI API не вернул сообщение" >&2
             exit 1
           fi
-          
-          echo "MESSAGE="$RESPONSE"" >> $GITHUB_ENV
+
+          echo "MESSAGE=$RESPONSE" >> $GITHUB_ENV
 
       - name: Notify
         if: ${{ env.NOTIFIER_ENABLED == 'true' }}
@@ -44,7 +53,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.ECC_TG_CHAT_ID }}
         run: |
-          curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage \
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id=$TELEGRAM_CHAT_ID \
             -d text="$MESSAGE" \
             -d parse_mode=MarkdownV2
