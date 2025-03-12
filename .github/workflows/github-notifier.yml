@@ -11,79 +11,32 @@ jobs:
     env:
       NOTIFIER_ENABLED: ${{ secrets.NOTIFIER_ENABLED }}  # Включение/выключение уведомлений через секрет
     steps:
-      - name: Установка jq (если отсутствует)
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Генерация сообщения через Hugging Face AI
+      - name: Выбор случайного сообщения
         if: ${{ env.NOTIFIER_ENABLED == 'true' }}
-        env:
-          HUGGINGFACE_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # Токен Hugging Face из секретов
         run: |
-          MODEL_NAME="sberbank-ai/rugpt3medium_based_on_gpt2"  # Используемая модель
-          PROMPT="Ты — руководитель команды разработки, который любит играть иногда хорошего полицейского, а иногда плохого (случайно). Напиши сообщение в Telegram, спрашивающее о статусе задач у незадачливого подчинённого с ником @SenchinYB, заодно пожелай хорошего дня, утра или вечера, в зависимости от текущего времени."
-
-          # Отладка: проверяем начало токена (без полного раскрытия)
-          echo "HUGGINGFACE_API_KEY starts with: ${HUGGINGFACE_API_KEY:0:3}"
-
-          # Проверка наличия токена
-          if [ -z "$HUGGINGFACE_API_KEY" ]; then
-            echo "HUGGINGFACE_API_KEY не задан, использование резервного сообщения"
-            echo "MESSAGE=Ошибка: токен не задан" >> $GITHUB_ENV
-            exit 0
-          fi
-
-          # Выводим информацию о запросе для отладки
-          echo "API URL: https://api-inference.huggingface.co/models/${MODEL_NAME}"
-          echo "Headers: Content-Type: application/json, Authorization: Bearer [скрыто]"
-
-          # Выполняем запрос к API и сохраняем статус и тело ответа, добавляя wait_for_model
-          RESPONSE=$(curl -s -w "%{http_code}" -X POST "https://api-inference.huggingface.co/models/${MODEL_NAME}" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $HUGGINGFACE_API_KEY" \
-            -d "{\"inputs\": \"${PROMPT}\", \"wait_for_model\": true, \"parameters\": {\"max_new_tokens\": 100, \"temperature\": 0.7}}")
-
-          HTTP_STATUS=${RESPONSE: -3}  # HTTP-код (последние 3 символа)
-          RESPONSE_JSON=${RESPONSE:0:${#RESPONSE}-3}  # Тело ответа
-
-          echo "HTTP Status: $HTTP_STATUS"
-          echo "DEBUG: API response: $RESPONSE_JSON"
-
-          # Обработка ответа в зависимости от HTTP-статуса
-          if [ "$HTTP_STATUS" -eq 200 ]; then
-            # Проверяем, является ли ответ валидным JSON
-            if echo "$RESPONSE_JSON" | jq . > /dev/null 2>&1; then
-              ERROR=$(echo "$RESPONSE_JSON" | jq -r '.error // empty')
-              if [ -n "$ERROR" ]; then
-                echo "Ошибка API: $ERROR. Используем резервное сообщение." >&2
-                RESPONSE="Ошибка: $ERROR"
-              else
-                RESPONSE=$(echo "$RESPONSE_JSON" | jq -r '.[0].generated_text')
-                RESPONSE="${RESPONSE#${PROMPT}}"  # Убираем промпт из ответа
-                RESPONSE=$(echo "$RESPONSE" | sed 's/^ *//')  # Убираем лишние пробелы
-                if [ -z "$RESPONSE" ]; then
-                  RESPONSE="Ошибка: пустой ответ от модели"
-                else
-                  # Экранирование символов для MarkdownV2 в Telegram
-                  RESPONSE=$(echo "$RESPONSE" | sed 's/!/\\!/g; s/\./\\./g; s/_/\\_/g; s/-/\\-/g; s/(/\\(/g; s/)/\\)/g')
-                fi
-              fi
-            else
-              echo "Ошибка: API вернул невалидный JSON: $RESPONSE_JSON" >&2
-              RESPONSE="Ошибка: невалидный ответ от API"
-            fi
-          else
-            echo "Ошибка: HTTP статус $HTTP_STATUS" >&2
-            RESPONSE="Ошибка: HTTP $HTTP_STATUS"
-          fi
-
-          echo "DEBUG: Processed response: $RESPONSE"
-          echo "MESSAGE=$RESPONSE" >> $GITHUB_ENV
+          MESSAGES=(
+            "@SenchinYB, йоу, как там наши задачки\\? Жду инфу, не томи\\!"
+            "Эгегей, @SenchinYB, доброе утро, как там наши дела\\? Не притворяйся, что не видишь\\!"
+            "Привет, @SenchinYB\\! Что по статусу\\? Только давай без отговорок\\!"
+            "Эй, @SenchinYB, ты уже доделал\\? Или мне начинать волноваться\\?"
+            "Здарова, @SenchinYB\\! Я тут подумал… А не пора ли мне услышать апдейт\\?"
+            "@SenchinYB, братан, если ты это читаешь – значит, пора мне ответить, иначе беда\\!"
+            "Сенчин, камон, давай по чесноку – задачи готовы или опять 'ещё чуть-чуть'\\?"
+            "Сенчин, если ты сейчас не ответишь, я закажу тебе ананасовую пиццу на офисный адрес\\!"
+            "Слушай, @SenchinYB, если ты мне не дашь апдейт, я начну кодить в стиле Python 2\\!"
+            "Аууу, @SenchinYB, ты где\\? Команда волнуется, а дедлайн не резиновый\\!"
+            "Ты либо даёшь апдейт, либо я объявляю тебя в федеральный розыск среди разработчиков\\!"
+            "Внимание, @SenchinYB, твои задачи превысили дедлайн, включаю аварийную сирену\\!"
+          )
+          RANDOM_INDEX=$((RANDOM % ${#MESSAGES[@]}))
+          MESSAGE=${MESSAGES[$RANDOM_INDEX]}
+          echo "MESSAGE=$(echo "$MESSAGE" | sed 's/\./\\\\./g; s/!/\\\\!/g; s/_/\\\\_/g; s/-/\\\\-/g; s/(\\\\(/g; s/)/\\\\)/g')" >> $GITHUB_ENV
 
       - name: Notify
         if: ${{ env.NOTIFIER_ENABLED == 'true' }}
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}    # Токен Telegram-бота
-          TELEGRAM_CHAT_ID: ${{ secrets.ECC_TG_CHAT_ID }}       # ID чата для уведомлений
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.ECC_TG_CHAT_ID }}
         run: |
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id=$TELEGRAM_CHAT_ID \
