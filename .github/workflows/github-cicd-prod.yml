@@ -2,7 +2,7 @@ name: Validate prod
 
 on: 
   schedule:
-    - cron: "* * * * *"
+    - cron: '0 15 * * *'
   workflow_dispatch:
 
 jobs:
@@ -43,8 +43,8 @@ jobs:
       - name: Notify failure
         if: failure()
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.ECC_TG_CHAT_ID }}
         run: |
           MESSAGE="❌❌❌ Не все образы prod окружения dance\\-cup работают корректно"
           curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage \
