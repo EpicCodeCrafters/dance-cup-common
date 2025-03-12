@@ -16,30 +16,40 @@ jobs:
 
       - name: Генерация сообщения через Hugging Face AI
         if: ${{ env.NOTIFIER_ENABLED == 'true' }}
+        env:
+          # Добавьте секрет HUGGINGFACE_API_KEY в настройках репозитория (можно получить бесплатно на Hugging Face)
+          HUGGINGFACE_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          # Определяем модель и формируем промпт
           MODEL_NAME="sberbank-ai/rugpt3small_based_on_gpt2"
-          PROMPT="Ты — руководитель команды разработки, который любит играть иногда хорошего полицейского, а иногда плохого (случайно). Напиши сообщение в Telegram, спрашивающее о статусе задач у незадачливого подчинённого с ником @SenchinYB, заодно пожелалай хорошего дня, утра или вечера, в зависимости от текущего времени. (А также пожалуйста экранируй все спец символы для TelegramApi при помощи '\\')"
+          PROMPT="Ты — руководитель команды разработки, который любит играть иногда хорошего полицейского, а иногда плохого (случайно). Напиши сообщение в Telegram, спрашивающее о статусе задач у незадачливого подчинённого с ником @SenchinYB, заодно пожелалай хорошего дня, утра или вечера, в зависимости от текущего времени. (не забудь экранировать символы для TG API при помощи '//')"
           
-          # Вызываем бесплатный Inference API Hugging Face
+          # Если HUGGINGFACE_API_KEY задан, добавляем заголовок авторизации
+          if [ -n "$HUGGINGFACE_API_KEY" ]; then
+              AUTH_HEADER="-H \"Authorization: Bearer $HUGGINGFACE_API_KEY\""
+          else
+              echo "HUGGINGFACE_API_KEY не задан, использование резервного сообщения"
+              echo "MESSAGE=Привет! Какой статус по задачам?" >> $GITHUB_ENV
+              exit 0
+          fi
+          
           RESPONSE_JSON=$(curl -s -X POST "https://api-inference.huggingface.co/models/${MODEL_NAME}" \
             -H "Content-Type: application/json" \
+            $AUTH_HEADER \
             -d "{\"inputs\": \"${PROMPT}\", \"parameters\": {\"max_new_tokens\": 50, \"temperature\": 0.7}}")
           
           echo "DEBUG: API response: $RESPONSE_JSON"
           
-          # Проверяем, не вернулась ли ошибка (например, превышен лимит)
           ERROR=$(echo "$RESPONSE_JSON" | jq -r '.error // empty')
           if [ -n "$ERROR" ]; then
             echo "Ошибка: $ERROR. Используем резервное сообщение." >&2
-            RESPONSE="Привет! Какой статус по задачам?"
+            RESPONSE="Ошибка"
           else
             RESPONSE=$(echo "$RESPONSE_JSON" | jq -r '.[0].generated_text')
-            # Если модель возвращает текст вместе с промптом – убираем его
+            # Если модель возвращает и промпт, и ответ, убираем часть промпта
             RESPONSE="${RESPONSE#${PROMPT}}"
             RESPONSE=$(echo "$RESPONSE" | sed 's/^ *//')
             if [ -z "$RESPONSE" ]; then
-              RESPONSE="Привет\\! Ошибка оповещения :("
+              RESPONSE="Ошибка"
             fi
           fi
           
