@@ -9,8 +9,14 @@ jobs:
     env:
       NOTIFIER_ENABLED: ${{ secrets.NOTIFIER_ENABLED }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: Запуск работы
         run: echo "Начало работы"
+      
+      - name: Ожидание
+        run: sleep 3600  # Ждём 1 час (3600 секунд)
 
       - name: Notify
         if: ${{ env.NOTIFIER_ENABLED == 'true' }}
@@ -23,9 +29,6 @@ jobs:
             -d chat_id=$TELEGRAM_CHAT_ID \
             -d text="$MESSAGE" \
             -d parse_mode=MarkdownV2
-
-      - name: Ожидание
-        run: sleep 3600  # Ждём 1 час (3600 секунд)
 
       - name: Повторный запуск
         run: gh workflow run github-notifier.yml
