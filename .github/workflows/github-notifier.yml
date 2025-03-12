@@ -1,6 +1,8 @@
 name: Notify
 
-on:
+on: 
+  schedule:
+    - cron: '0 7 * * *'
   workflow_dispatch:
 
 jobs:
@@ -9,14 +11,25 @@ jobs:
     env:
       NOTIFIER_ENABLED: ${{ secrets.NOTIFIER_ENABLED }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Генерация сообщения через ChatGPT
+        if: ${{ env.NOTIFIER_ENABLED == 'true' }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          RESPONSE=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "model": "gpt-4",
+              "messages": [
+                {"role": "system", "content": "Ты — руководитель команды разработки, который любит играть иногда хорошего полицейского, а иногда плохого (случайно)."},
+                {"role": "user", "content": "Напиши сообщение в Telegram, спрашивающее о статусе задач у незадачливого подчинённого, заодно пожелалай хорошего дня, утра или вечера, в зависимости от текущего времени."}
+              ],
+              "temperature": 0.7
+            }' | jq -r '.choices[0].message.content')
 
-      - name: Запуск работы
-        run: echo "Начало работы"
-      
-      - name: Ожидание
-        run: sleep 3600  # Ждём 1 час (3600 секунд)
+          echo "$RESPONSE"
+          echo "MESSAGE=\"$RESPONSE\"" >> $GITHUB_ENV
 
       - name: Notify
         if: ${{ env.NOTIFIER_ENABLED == 'true' }}
@@ -24,13 +37,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.ECC_TG_CHAT_ID }}
         run: |
-          MESSAGE="@SenchinYB Привет\\! Какой статус по задачам?"
           curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage \
             -d chat_id=$TELEGRAM_CHAT_ID \
             -d text="$MESSAGE" \
             -d parse_mode=MarkdownV2
-
-      - name: Повторный запуск
-        run: gh workflow run github-notifier.yml
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
