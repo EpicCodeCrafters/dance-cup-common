@@ -2,8 +2,8 @@ name: Notify
 
 on:
   schedule:
-    - cron: '0 7,15 * * *'  # Запуск каждый день в 7:00 и 15:00 по UTC
-  workflow_dispatch:     # Возможность ручного запуска
+    - cron: '* * * * *'
+  workflow_dispatch:
 
 jobs:
   loop-job:
