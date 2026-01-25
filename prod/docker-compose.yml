@@ -54,6 +54,13 @@ services:
       - kafka3
     entrypoint: [ "sh", "-c", "sleep 10 && kafka-topics --create --if-not-exists --bootstrap-server kafka1:9092,kafka2:9093,kafka3:9094 --replication-factor 3 --partitions 3 --topic dance_cup_events && echo 'Топик создан'" ]
 
+  redis:
+    container_name: redis
+    image: redis
+    restart: always
+    ports:
+      - 16379:6379
+
   dance-cup-api-db:
     container_name: dance-cup-api-db
     image: postgres
@@ -85,11 +92,13 @@ services:
       - dance-cup-api-db
     environment:
       ASPNETCORE_URLS: http://+:80
+      CachingOptions__ConnectionString: "redis:6379"
+      CachingOptions__ExpirationMinutes: 60
       StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
       KafkaOptions__BootstrapServers: "kafka1:9092,kafka2:9093,kafka3:9094"
       KafkaOptions__Topics__DanceCupEvents__Name: "dance_cup_events"
       KafkaOptions__Topics__DanceCupEvents__ConsumerGroup: "dance-cup-api"
-    entrypoint: [ "sh", "-c", "sleep 10 && dotnet ECC.DanceCup.Api.dll --migrate"]
+    entrypoint: [ "sh", "-c", "sleep 15 && dotnet ECC.DanceCup.Api.dll --migrate"]
   
   dance-cup-api:
     container_name: dance-cup-api
@@ -100,6 +109,8 @@ services:
       - dance-cup-api-migrate
     environment:
       ASPNETCORE_URLS: http://+:80
+      CachingOptions__ConnectionString: "redis:6379"
+      CachingOptions__ExpirationMinutes: 60
       StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
       KafkaOptions__BootstrapServers: "kafka1:9092,kafka2:9093,kafka3:9094"
       KafkaOptions__Topics__DanceCupEvents__Name: "dance_cup_events"
@@ -114,6 +125,8 @@ services:
       - dance-cup-api-migrate
     environment:
       ASPNETCORE_URLS: http://+:80
+      CachingOptions__ConnectionString: "redis:6379"
+      CachingOptions__ExpirationMinutes: 60
       StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
       KafkaOptions__BootstrapServers: "kafka1:9092,kafka2:9093,kafka3:9094"
       KafkaOptions__Topics__DanceCupEvents__Name: "dance_cup_events"
@@ -128,6 +141,8 @@ services:
       - dance-cup-api-migrate
     environment:
       ASPNETCORE_URLS: http://+:80
+      CachingOptions__ConnectionString: "redis:6379"
+      CachingOptions__ExpirationMinutes: 60
       StorageOptions__ConnectionString: "Host=dance-cup-api-db; Port=5432; Database=dance-cup-api; Username=postgres-user; Password=postgres;"
       KafkaOptions__BootstrapServers: "kafka1:9092,kafka2:9093,kafka3:9094"
       KafkaOptions__Topics__DanceCupEvents__Name: "dance_cup_events"
@@ -147,7 +162,7 @@ services:
       SecurityOptions__TokenExpiresMinutes: 60
       KafkaOptions__BootstrapServers: "kafka1:9092,kafka2:9093,kafka3:9094"
       KafkaOptions__Topics__DanceCupEvents__Name: "dance_cup_events"
-    entrypoint: [ "sh", "-c", "sleep 10 && dotnet ECC.DanceCup.Auth.dll --migrate"]
+    entrypoint: [ "sh", "-c", "sleep 15 && dotnet ECC.DanceCup.Auth.dll --migrate"]
   
   dance-cup-auth:
     container_name: dance-cup-auth
@@ -182,6 +197,29 @@ services:
       AuthOptions__ValidAudience: "dance-cup-audience"
       AuthOptions__ValidIssuer: "dance-cup-issuer"
 
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./../../dance-cup-prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./../../dance-cup-grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./../../dance-cup-grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana-data:/var/lib/grafana
+
 volumes:
   dance-cup-api-db-volume:
   dance-cup-auth-db-volume:
+  prometheus-data:
+  grafana-data:
