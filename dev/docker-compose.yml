@@ -218,7 +218,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      DanceCupApiOptions__Address: http://dance-cup-api:80
+      DanceCupApiOptions__Addresses__0: http://dance-cup-api:80
+      DanceCupApiOptions__Addresses__1: http://dance-cup-api-2:80
+      DanceCupApiOptions__Addresses__2: http://dance-cup-api-3:80
       DanceCupAuthOptions__Address: http://dance-cup-auth:80
       AuthOptions__Secret: "cfa4a6f7-8d5d-4c61-aec9-0791d743dbb9_d2f60f8e-1d61-4c4a-92a5-4f9a90745691"
       AuthOptions__ValidAudience: "dance-cup-audience"
