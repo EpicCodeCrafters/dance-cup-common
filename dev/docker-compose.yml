@@ -268,7 +268,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./../../dance-cup-prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
 
@@ -280,8 +280,8 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - ./../../dance-cup-grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./../../dance-cup-grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./../grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./../grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - grafana-data:/var/lib/grafana
 
 volumes:
