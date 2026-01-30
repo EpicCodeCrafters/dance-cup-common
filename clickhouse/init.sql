@@ -36,7 +36,7 @@
 ENGINE = MergeTree()
 PARTITION BY toYYYYMM(Timestamp)
 ORDER BY (Timestamp, TraceId, id)
-TTL Timestamp + INTERVAL 7 DAY TO DISK 's3_archive',
+TTL Timestamp + INTERVAL 7 DAY TO VOLUME 'cold',
     Timestamp + INTERVAL 30 DAY DELETE
 SETTINGS storage_policy = 'logs_policy';
 
