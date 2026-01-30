@@ -26,7 +26,8 @@
                 </volumes>
             </default>
             
-            <!-- Policy for logs: keep 7 days on local disk, then move to S3 -->
+            <!-- Policy for logs: TTL moves data to S3 after 7 days -->
+            <!-- Note: move_factor (0.2) means data moves when hot storage reaches 80% capacity -->
             <logs_policy>
                 <volumes>
                     <hot>

@@ -101,6 +101,7 @@ services:
       - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/storage.xml
     depends_on:
       - object-storage
+      - object-storage-init
 
   redis:
     container_name: redis
