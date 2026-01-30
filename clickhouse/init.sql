@@ -35,8 +35,10 @@
 )
 ENGINE = MergeTree()
 PARTITION BY toYYYYMM(Timestamp)
-ORDER BY (Timestamp, TraceId, id);
--- TTL toDateTime(Timestamp) + INTERVAL 1 MINUTE;
+ORDER BY (Timestamp, TraceId, id)
+TTL Timestamp + INTERVAL 7 DAY TO DISK 's3_archive',
+    Timestamp + INTERVAL 30 DAY DELETE
+SETTINGS storage_policy = 'logs_policy';
 
 CREATE TABLE IF NOT EXISTS kafka_messages
 (
@@ -56,7 +58,7 @@ AS SELECT
     parseDateTime64BestEffort(
             JSONExtractString(value, 'Timestamp'),
             6
-    ) AS timestamp,
+    ) AS Timestamp,
 
     JSONExtractString(value, 'Level') AS Level,
     JSONExtractString(value, 'MessageTemplate') AS MessageTemplate,

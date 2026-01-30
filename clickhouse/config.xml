@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <storage_configuration>
+        <disks>
+            <!-- Local disk for active data -->
+            <default>
+                <keep_free_space_bytes>1073741824</keep_free_space_bytes>
+            </default>
+            
+            <!-- S3 disk for archived logs -->
+            <s3_archive>
+                <type>s3</type>
+                <endpoint>http://object-storage:9000/logs-archive/</endpoint>
+                <access_key_id>admin</access_key_id>
+                <secret_access_key>admin123</secret_access_key>
+                <metadata_path>/var/lib/clickhouse/disks/s3_archive/</metadata_path>
+            </s3_archive>
+        </disks>
+        
+        <policies>
+            <default>
+                <volumes>
+                    <default>
+                        <disk>default</disk>
+                    </default>
+                </volumes>
+            </default>
+            
+            <!-- Policy for logs: keep 7 days on local disk, then move to S3 -->
+            <logs_policy>
+                <volumes>
+                    <hot>
+                        <disk>default</disk>
+                    </hot>
+                    <cold>
+                        <disk>s3_archive</disk>
+                    </cold>
+                </volumes>
+                <move_factor>0.2</move_factor>
+            </logs_policy>
+        </policies>
+    </storage_configuration>
+</clickhouse>
