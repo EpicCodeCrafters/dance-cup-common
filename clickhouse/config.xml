@@ -13,6 +13,8 @@
                 <endpoint>http://object-storage:9000/logs-archive/</endpoint>
                 <access_key_id>admin</access_key_id>
                 <secret_access_key>admin123</secret_access_key>
+                <use_environment_credentials>false</use_environment_credentials>
+                <region></region>
                 <metadata_path>/var/lib/clickhouse/disks/s3_archive/</metadata_path>
             </s3_archive>
         </disks>
