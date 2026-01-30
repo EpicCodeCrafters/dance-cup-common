@@ -10,7 +10,7 @@
             <!-- S3 disk for archived logs -->
             <s3_archive>
                 <type>s3</type>
-                <endpoint>http://object-storage:9000/logs-archive/</endpoint>
+                <endpoint>http://object-storage:9000/logs-archive</endpoint>
                 <access_key_id>admin</access_key_id>
                 <secret_access_key>admin123</secret_access_key>
                 <use_environment_credentials>false</use_environment_credentials>
