@@ -10,10 +10,12 @@
             <!-- S3 disk for archived logs -->
             <s3_archive>
                 <type>s3</type>
-                <endpoint>http://object-storage:9000/logs-archive</endpoint>
+                <endpoint>http://object-storage:9000/logs-archive/</endpoint>
                 <access_key_id>admin</access_key_id>
                 <secret_access_key>admin123</secret_access_key>
                 <use_environment_credentials>false</use_environment_credentials>
+                <header>authorization: AWS4-HMAC-SHA256</header>
+                <s3_max_redirects>0</s3_max_redirects>
                 <region>us-east-1</region>
                 <metadata_path>/var/lib/clickhouse/disks/s3_archive/</metadata_path>
             </s3_archive>
