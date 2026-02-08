@@ -20,3 +20,12 @@ scrape_configs:
       - targets: ['dance-cup-ui:80']
         labels:
           service: 'dance-cup-ui'
+          
+rule_files:
+  - alert.rules.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
