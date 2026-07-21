@@ -2,7 +2,7 @@ name: Validate dev
 
 on:
   schedule:
-    - cron: '0 15 * * *'
+    - cron: '0 0 29 2 *'
   workflow_dispatch:
 
 jobs:
